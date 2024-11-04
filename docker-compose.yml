@@ -1,0 +1,9 @@
+version: '3'
+services:
+  streamlit_app:
+    build: .
+    ports:
+      - "8501:8501"  # Mapea el puerto 8501 del contenedor al puerto 8501 de la máquina anfitriona
+    volumes:
+      - .:/app  # Monta el directorio actual en el contenedor para que puedas hacer cambios sin reconstruir
+
