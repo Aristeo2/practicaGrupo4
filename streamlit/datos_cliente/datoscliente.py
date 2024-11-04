@@ -1,69 +1,56 @@
 import re
 
-class Verificar_Cliente():
-    def __init__(self, nombre, dni, direccion, telefono, email):
-        self.nombre = nombre
-        self.dni = dni
-        self.direccion = direccion
-        self.telefono = telefono
-        self.email = email
-
-    def verificar_nombre(self):
+class Verificar_Cliente:
+        
+    @staticmethod
+    def verificar_nombre(nombre):
         """Verifica que el nombre solo contenga letras y espacios, y tenga una longitud válida."""
-        if len(self.nombre) < 2 or len(self.nombre) > 50:
+        if len(nombre) < 2 or len(nombre) > 50:
             return False, "El nombre debe tener entre 2 y 50 caracteres."
-        if not all(x.isalpha() or x.isspace() for x in self.nombre):
+        if not all(x.isalpha() or x.isspace() for x in nombre):
             return False, "El nombre solo puede contener letras y espacios."
         return True, "Nombre válido."
 
-    def verificar_dni(self):
+    @staticmethod
+    def verificar_dni(dni):
         """Verifica que el DNI tenga 8 dígitos y, opcionalmente, una letra al final."""
         # Patrón: 8 dígitos opcionalmente seguidos de una letra
         patron_dni = r"^\d{8}[A-Za-z]?$"
-        if not re.match(patron_dni, self.dni):
+        if not re.match(patron_dni, dni):
             return False, "Formato de DNI no válido."
         return True, "DNI válido."
 
-    def verificar_direccion(self):
+    @staticmethod
+    def verificar_direccion(direccion):
         """Verifica que la dirección tenga entre 5 y 100 caracteres."""
-        if len(self.direccion) < 5 or len(self.direccion) > 100:
+        if len(direccion) < 5 or len(direccion) > 100:
             return False, "La dirección debe tener entre 5 y 100 caracteres."
         return True, "Dirección válida."
 
-    def verificar_telefono(self):
+    @staticmethod
+    def verificar_telefono(telefono):
         """Verifica que el número de teléfono solo contenga dígitos y tenga entre 7 y 15 caracteres."""
-        if not self.telefono.isdigit() or not (7 <= len(self.telefono) <= 15):
+        if not telefono.isdigit() or not (7 <= len(telefono) <= 15):
             return False, "El teléfono debe contener solo dígitos y tener entre 7 y 15 caracteres."
         return True, "Teléfono válido."
 
-    def verificar_email(self):
+    @staticmethod
+    def verificar_email(email):
         """Verifica que el email tenga un formato válido."""
         # Expresión regular para validar el formato de un correo electrónico
         patron_email = r"^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}$"
-        if not re.match(patron_email, self.email):
+        if not re.match(patron_email, email):
             return False, "Formato de correo electrónico no válido."
         return True, "Correo electrónico válido."
 
-    def verificar_formulario(self):
+    @staticmethod
+    def verificar_formulario(nombre, dni, direccion, telefono, email):
         """Verifica todos los campos del formulario y devuelve los resultados."""
         resultados = {
-            "nombre": self.verificar_nombre(),
-            "dni": self.verificar_dni(),
-            "direccion": self.verificar_direccion(),
-            "telefono": self.verificar_telefono(),
-            "email": self.verificar_email()
+            "nombre": Verificar_Cliente.verificar_nombre(nombre),
+            "dni": Verificar_Cliente.verificar_dni(dni),
+            "direccion": Verificar_Cliente.verificar_direccion(direccion),
+            "telefono": Verificar_Cliente.verificar_telefono(telefono),
+            "email": Verificar_Cliente.verificar_email(email)
         }
         return resultados
-
-cliente = Verificar_Cliente(
-    "Juan Pérez",
-    "12345678R",
-    "Calle Falsa 123, Ciudad",
-    "123456789",
-    "juan.perez@example.com"
-)
-
-resultados = cliente.verificar_formulario()
-
-for campo, (valido, mensaje) in resultados.items():
-    print(f"{campo.capitalize()}: {'✔' if valido else '✘'} - {mensaje}")
