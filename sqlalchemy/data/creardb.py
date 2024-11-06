@@ -45,4 +45,3 @@ class Mascota(Base):
 Base.metadata.create_all(engine)
  
 print("Base de datos y tablas creadas.") 
-
