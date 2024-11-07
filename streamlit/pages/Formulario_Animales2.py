@@ -4,57 +4,8 @@ import streamlit as st
 import sqlite3
 from datetime import datetime
 import re
+from DatosMascota import VerificarMascota
 
-# Clase de verificación de datos de mascotas
-class VerificarMascota:
-    
-    @staticmethod
-    def nombre(nombre):
-        if not nombre:
-            return False
-        if not all(c.isalpha() or c.isspace() for c in nombre):
-            return False
-        if not nombre[0].isupper():
-            return False
-        return True
-
-    @staticmethod
-    def tipo(animal):
-        return animal in ["Perro", "Gato"]
-
-    @staticmethod
-    def raza(raza):
-        if not raza:
-            return False
-        if len(raza) >= 20:
-            return False
-        if not all(c.isalpha() or c.isspace() for c in raza):
-            return False
-        if not raza[0].isupper():
-            return False
-        return True
-
-    @staticmethod
-    def fecha_nacimiento(fecha):
-        try:
-            datetime.strptime(fecha, "%d/%m/%Y")
-            return True  
-        except ValueError:
-            return False  
-
-    @staticmethod
-    def patologias(patologia):
-        if not patologia:
-            return False
-        if not all(c.isalpha() or c.isspace() for c in patologia):
-            return False
-        if not patologia[0].isupper():
-            return False
-        return True
-
-    @staticmethod
-    def dueño(dueño):
-        return VerificarMascota.nombre(dueño)
 
 # Configuración de conexión a la base de datos
 conn = sqlite3.connect('clinica_veterinaria.db')
