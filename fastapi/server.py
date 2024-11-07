@@ -6,8 +6,8 @@ from fastapi import FastAPI, File, UploadFile,Form, HTTPException
 import pandas as pd
 import csv
 from typing import  List
-
 from pydantic import BaseModel as PydanticBaseModel
+from modelo import Cliente,Mascota
 
 class BaseModel(PydanticBaseModel):
     class Config:
@@ -160,3 +160,4 @@ async def delete_mascota(mascota_id: int):
     data = data[data['id'] != mascota_id]
     write_csv(data, MASCOTAS_CSV)
     return {"detail": "Mascota deleted"}
+
