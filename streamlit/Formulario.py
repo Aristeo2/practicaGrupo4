@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit.datos_cliente.datoscliente import Verificar_Cliente
+from datos_cliente.datoscliente import Verificar_Cliente
 
 # Título
 st.title("Formulario de Registro de Personas")
