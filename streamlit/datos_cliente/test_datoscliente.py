@@ -1,3 +1,5 @@
+# Pruebas para verificar datos de los clientes
+
 import unittest
 from datoscliente import Verificar_Cliente 
 

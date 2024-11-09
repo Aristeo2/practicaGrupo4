@@ -1,3 +1,5 @@
+# Código para verificar datos introducidos de los clientes
+
 import re
 
 class Verificar_Cliente:
