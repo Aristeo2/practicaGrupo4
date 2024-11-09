@@ -1,3 +1,5 @@
+# Importación de clase para verificar datos de cliente
+
 import streamlit as st
 from datos_cliente.datoscliente import Verificar_Cliente
 
