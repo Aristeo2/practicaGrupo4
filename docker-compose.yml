@@ -1,30 +1,9 @@
 version: '3'
-
 services:
-  
-  fastapi:
-    build: fastapi/
+  streamlit_app:
+    build: .
     ports:
-      - 8000:8000
-    networks:
-      - deploy_network
-    container_name: fastapi
+      - "8501:8501"  # Mapea el puerto 8501 del contenedor al puerto 8501 de la máquina anfitriona
     volumes:
-      - mis_datos:/var/lib/docker/volumes/aa-streamlit-fastapi_mis_datos/_data
-  streamlit:
-    build: streamlit/
-    depends_on:
-      - fastapi
-    ports:
-        - 8501:8501
-    networks:
-      - deploy_network
-    container_name: streamlit
-    volumes:
-      - mis_datos:/var/lib/docker/volumes/aa-streamlit-fastapi_mis_datos/_data
-networks:
-  deploy_network:
-    driver: bridge
-    
-volumes:
-   mis_datos:
+      - .:/app  # Monta el directorio actual en el contenedor para que puedas hacer cambios sin reconstruir
+
