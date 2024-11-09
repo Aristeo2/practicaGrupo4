@@ -12,5 +12,4 @@ COPY . /streamlit
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "Formulario.py", "--server.port=8501", "--server.address=0.0.0.0"]
-
+CMD ["streamlit", "run", "Analisis_de_transacciones.py"]
