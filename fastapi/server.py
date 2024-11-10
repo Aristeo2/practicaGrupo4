@@ -69,8 +69,8 @@ async def submit_form(data: FormData):
 
 # Definimos las rutas de los archivos csv
 
-CLIENTES_CSV = "clientes.csv"
-MASCOTAS_CSV = "mascotas.csv"
+CLIENTES_CSV = "/app/data/clientes.csv"
+MASCOTAS_CSV = "/app/data/mascotas.csv"
 
 # Funciones de ayuda para leer y escribir en los CSV
 def read_csv(file_path):
@@ -86,7 +86,7 @@ async def get_clientes():
     return data.to_dict(orient="records")
 
 @app.get("/clientes/{cliente_id}")
-async def get_cliente(cliente_id: int):
+async def get_cliente(cliente_id: str):
     data = read_csv(CLIENTES_CSV)
     cliente = data[data['id'] == cliente_id]
     if cliente.empty:
@@ -104,7 +104,7 @@ async def create_cliente(cliente: Cliente):
     return cliente
 
 @app.put("/clientes/{cliente_id}")
-async def update_cliente(cliente_id: int, cliente: Cliente):
+async def update_cliente(cliente_id: str, cliente: Cliente):
     data = read_csv(CLIENTES_CSV)
     if cliente_id not in data['id'].values:
         raise HTTPException(status_code=404, detail="Cliente not found")
@@ -114,7 +114,7 @@ async def update_cliente(cliente_id: int, cliente: Cliente):
     return cliente
 
 @app.delete("/clientes/{cliente_id}")
-async def delete_cliente(cliente_id: int):
+async def delete_cliente(cliente_id: str):
     data = read_csv(CLIENTES_CSV)
     data = data[data['id'] != cliente_id]
     write_csv(data, CLIENTES_CSV)
@@ -127,7 +127,7 @@ async def get_mascotas():
     return data.to_dict(orient="records")
 
 @app.get("/mascotas/{mascota_id}")
-async def get_mascota(mascota_id: int):
+async def get_mascota(mascota_id: str):
     data = read_csv(MASCOTAS_CSV)
     mascota = data[data['id'] == mascota_id]
     if mascota.empty:
@@ -145,7 +145,7 @@ async def create_mascota(mascota: Mascota):
     return mascota
 
 @app.put("/mascotas/{mascota_id}")
-async def update_mascota(mascota_id: int, mascota: Mascota):
+async def update_mascota(mascota_id: str, mascota: Mascota):
     data = read_csv(MASCOTAS_CSV)
     if mascota_id not in data['id'].values:
         raise HTTPException(status_code=404, detail="Mascota not found")
@@ -155,7 +155,7 @@ async def update_mascota(mascota_id: int, mascota: Mascota):
     return mascota
 
 @app.delete("/mascotas/{mascota_id}")
-async def delete_mascota(mascota_id: int):
+async def delete_mascota(mascota_id: str):
     data = read_csv(MASCOTAS_CSV)
     data = data[data['id'] != mascota_id]
     write_csv(data, MASCOTAS_CSV)
