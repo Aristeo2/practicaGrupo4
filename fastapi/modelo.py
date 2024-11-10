@@ -1,11 +1,11 @@
 #Base model template
 from typing import Optional
 from pydantic import BaseModel, Field
-import datetime
+from datetime import datetime
 import uuid
 
 class Cliente(BaseModel):
-    id: str
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     nombre: str
     dni: str
     direccion: str
@@ -13,7 +13,7 @@ class Cliente(BaseModel):
     email:str
 
 class Mascota(BaseModel):
-    id: str
+    id: str  = Field(default_factory=lambda: str(uuid.uuid4()))
     nombre:str
     especie:str
     raza: str
