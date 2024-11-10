@@ -5,8 +5,8 @@ from fastapi.responses import JSONResponse
 from fastapi import FastAPI, File, UploadFile,Form
 import pandas as pd
 from typing import  List
-
 from pydantic import BaseModel as PydanticBaseModel
+from modelo import Cliente,Mascota
 
 class BaseModel(PydanticBaseModel):
     class Config:
@@ -63,3 +63,100 @@ class FormData(BaseModel):
 @app.post("/envio/")
 async def submit_form(data: FormData):
     return {"message": "Formulario recibido", "data": data}
+
+### GESTIÓN DE CLIENTES Y MASCOTAS
+
+# Definimos las rutas de los archivos csv
+
+CLIENTES_CSV = "/app/data/clientes.csv"
+MASCOTAS_CSV = "/app/data/mascotas.csv"
+
+# Funciones de ayuda para leer y escribir en los CSV
+def read_csv(file_path):
+    return pd.read_csv(file_path)
+
+def write_csv(data, file_path):
+    data.to_csv(file_path, index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+# Operaciones CRUD para Clientes
+@app.get("/clientes/")
+async def get_clientes():
+    data = read_csv(CLIENTES_CSV)
+    return data.to_dict(orient="records")
+
+@app.get("/clientes/{cliente_id}")
+async def get_cliente(cliente_id: str):
+    data = read_csv(CLIENTES_CSV)
+    cliente = data[data['id'] == cliente_id]
+    if cliente.empty:
+        raise HTTPException(status_code=404, detail="Cliente not found")
+    return cliente.to_dict(orient="records")[0]
+
+@app.post("/clientes/")
+async def create_cliente(cliente: Cliente):
+    data = read_csv(CLIENTES_CSV)
+    if cliente.id in data['id'].values:
+        raise HTTPException(status_code=400, detail="ID already exists")
+    new_cliente = pd.DataFrame([cliente.dict()])
+    data = pd.concat([data, new_cliente], ignore_index=True)
+    write_csv(data, CLIENTES_CSV)
+    return cliente
+
+@app.put("/clientes/{cliente_id}")
+async def update_cliente(cliente_id: str, cliente: Cliente):
+    data = read_csv(CLIENTES_CSV)
+    if cliente_id not in data['id'].values:
+        raise HTTPException(status_code=404, detail="Cliente not found")
+    data.loc[data['id'] == cliente_id, ['nombre', 'dni', 'direccion', 'tlf', 'email']] = \
+        [cliente.nombre, cliente.dni, cliente.direccion, cliente.tlf, cliente.email]
+    write_csv(data, CLIENTES_CSV)
+    return cliente
+
+@app.delete("/clientes/{cliente_id}")
+async def delete_cliente(cliente_id: str):
+    data = read_csv(CLIENTES_CSV)
+    data = data[data['id'] != cliente_id]
+    write_csv(data, CLIENTES_CSV)
+    return {"detail": "Cliente deleted"}
+
+# Operaciones CRUD para Mascotas
+@app.get("/mascotas/")
+async def get_mascotas():
+    data = read_csv(MASCOTAS_CSV)
+    return data.to_dict(orient="records")
+
+@app.get("/mascotas/{mascota_id}")
+async def get_mascota(mascota_id: str):
+    data = read_csv(MASCOTAS_CSV)
+    mascota = data[data['id'] == mascota_id]
+    if mascota.empty:
+        raise HTTPException(status_code=404, detail="Mascota not found")
+    return mascota.to_dict(orient="records")[0]
+
+@app.post("/mascotas/")
+async def create_mascota(mascota: Mascota):
+    data = read_csv(MASCOTAS_CSV)
+    if mascota.id in data['id'].values:
+        raise HTTPException(status_code=400, detail="ID already exists")
+    new_mascota = pd.DataFrame([mascota.dict()])
+    data = pd.concat([data, new_mascota], ignore_index=True)
+    write_csv(data, MASCOTAS_CSV)
+    return mascota
+
+@app.put("/mascotas/{mascota_id}")
+async def update_mascota(mascota_id: str, mascota: Mascota):
+    data = read_csv(MASCOTAS_CSV)
+    if mascota_id not in data['id'].values:
+        raise HTTPException(status_code=404, detail="Mascota not found")
+    data.loc[data['id'] == mascota_id, ['nombre', 'especie', 'raza', 'fecha_nacimiento', 'patologias', 'dueño']] = \
+        [mascota.nombre, mascota.especie, mascota.raza, mascota.fecha_nacimiento, mascota.patologias, mascota.dueño]
+    write_csv(data, MASCOTAS_CSV)
+    return mascota
+
+@app.delete("/mascotas/{mascota_id}")
+async def delete_mascota(mascota_id: str):
+    data = read_csv(MASCOTAS_CSV)
+    data = data[data['id'] != mascota_id]
+    write_csv(data, MASCOTAS_CSV)
+    return {"detail": "Mascota deleted"}
+
