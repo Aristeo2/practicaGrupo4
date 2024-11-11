@@ -2,7 +2,7 @@ import shutil
 
 import io
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI, File, UploadFile,Form
+from fastapi import FastAPI, File, UploadFile,Form, HTTPException
 import pandas as pd
 from typing import  List
 from pydantic import BaseModel as PydanticBaseModel
@@ -66,7 +66,7 @@ async def submit_form(data: FormData):
 
 ### GESTIÓN DE CLIENTES Y MASCOTAS
 
-# Definimos las rutas de los archivos csv
+# Defserinimos las rutas de los archivos csv
 
 CLIENTES_CSV = "/app/data/clientes.csv"
 MASCOTAS_CSV = "/app/data/mascotas.csv"
