@@ -2,7 +2,6 @@ from pymongo import MongoClient
 
 
 # Configuración de MongoDB
-MONGO_URL = "mongodb://localhost:27017"
-client = MongoClient(MONGO_URL)
+client = MongoClient("mongodb+srv://aristeolg:clinicaVetGr4@cluster0.uylyg.mongodb.net/?retryWrites=true&w=majority")
 db = client["mi_base_de_datos"]
 clientes_collection = db["clientes"]

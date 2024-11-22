@@ -1,4 +1,4 @@
-from database import clientes_collection
+from mongo.database import clientes_collection
 from bson import ObjectId
 
 

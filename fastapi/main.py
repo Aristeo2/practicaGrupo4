@@ -1,14 +1,25 @@
 from fastapi import FastAPI, HTTPException
-from crud import create_cliente, get_cliente, add_mascota, update_cliente, update_mascota, delete_cliente, delete_mascota
-from schemas import Cliente, Mascota
+from mongo.crud import create_cliente, get_cliente, add_mascota, update_cliente, update_mascota, delete_cliente, delete_mascota
+from mongo.schemas import Cliente, Mascota
+from mongo.database import clientes_collection
+from typing import List
 
 app = FastAPI()
 
+def get_all_clientes():
+    # Asume que `clientes_collection` es tu colección de clientes en MongoDB
+    return list(clientes_collection.find({}, {"_id": 0}))  # Retorna todos los clientes sin el campo "_id"
 
 @app.post("/clientes/", response_model=Cliente)
 def create_cliente_endpoint(cliente: Cliente):
     nuevo_cliente = create_cliente(cliente.dict())
     return nuevo_cliente
+
+# Endpoint para listar todos los clientes
+@app.get("/clientes/", response_model=List[Cliente])
+def get_clientes_endpoint():
+    clientes = get_all_clientes()  # Obtén todos los clientes de la base de datos
+    return clientes
 
 @app.get("/clientes/{cliente_id}", response_model=Cliente)
 def get_cliente_endpoint(cliente_id: str):
