@@ -1,9 +1,8 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
 from bson import ObjectId
+import uuid
 
 
 # Manejo de ObjectId como cadena en Pydantic
@@ -24,20 +23,17 @@ class PyObjectId(ObjectId):
 
 
 class Mascota(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id")  # Se asigna automáticamente
+    id: Optional[str]  
     nombre: str
     especie: str
     raza: str
     fecha_nacimiento: str  # ISO 8601 format (ej: "2023-11-10")
     patologias: Optional[str] = None
 
-    class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
 
 
 class Cliente(BaseModel):
-    id: Optional[PyObjectId] = Field(alias="_id")  # Se asigna automáticamente
+    id: Optional[str] = None
     nombre: str
     dni: str
     direccion: str
@@ -46,8 +42,7 @@ class Cliente(BaseModel):
     mascotas: List[Mascota] = []  # Mascotas embebidas
 
     class Config:
-        allow_population_by_field_name = True
-        json_encoders = {ObjectId: str}
+        json_encoders = {uuid.UUID: str}  # Convierte UUID a string si es necesario
 
 
 

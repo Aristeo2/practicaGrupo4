@@ -23,13 +23,9 @@ def get_clientes():
         return []
     
 def create_cliente(cliente):
-    try:
-        response = requests.post(f"{API_URL}/clientes/", json=cliente)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error al registrar cliente: {e}")
-        return None
+    cliente.pop("id", None)  # Elimina el campo `id` si ya existe
+    response = requests.post(f"{API_URL}/clientes/", json=cliente)
+    return response.json() if response.status_code == 200 else None
 
 
 # Título
@@ -75,6 +71,7 @@ if st.button("Registrar Dueño"):
         }
         
         nuevo_cliente = create_cliente(cliente)
+        
         if nuevo_cliente:
             st.success("¡Dueño registrado exitosamente!")
             st.write("Información del Dueño:")

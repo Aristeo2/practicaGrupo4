@@ -18,13 +18,19 @@ def create_cliente(cliente):
     response = requests.post(f"{API_URL}/clientes/", json=cliente)
     return response.json() if response.status_code == 200 else None
 
-def get_mascotas():
-    response = requests.get(f"{API_URL}/mascotas/")
+def get_mascotas(cliente_id=None):
+    if cliente_id:
+        response = requests.get(f"{API_URL}/clientes/{cliente_id}/mascotas/")
+    else:
+        response = requests.get(f"{API_URL}/mascotas/")
     return response.json() if response.status_code == 200 else []
 
-def create_mascota(mascota):
-    response = requests.post(f"{API_URL}/mascotas/", json=mascota)
+
+def create_mascota(dueño_id, mascota):
+    # Endpoint específico para vincular la mascota al cliente
+    response = requests.post(f"{API_URL}/clientes/{dueño_id}/mascotas/", json=mascota)
     return response.json() if response.status_code == 200 else None
+
 
 # Encabezado
 st.header("Mascotas")
@@ -37,7 +43,7 @@ especie = st.selectbox("Especie", ["Perro", "Gato"])
 raza = st.text_input("Raza")
 fecha_nacimiento = st.date_input("Fecha de Nacimiento")
 patologias = st.text_input("Patologías")
-dueño_id = st.number_input("ID del Dueño", min_value=1, step=1)
+dueño_id = st.text_input("ID del Dueño",)
 
 if st.button("Guardar Mascota"):
     # Verificar que el ID del dueño existe en la lista de clientes
@@ -54,15 +60,15 @@ if st.button("Guardar Mascota"):
             "raza": raza,
             "fecha_nacimiento": fecha_nacimiento_datetime.isoformat(),
             "patologias": patologias,
-            "dueño": dueño_id
         }
-        nueva_mascota = create_mascota(mascota)
+        nueva_mascota = create_mascota(dueño_id, mascota)  # Pasar el ID del dueño y los datos de la mascota
         if nueva_mascota:
             st.success("Mascota creada con éxito")
         else:
             st.error("Error al crear la mascota")
     else:
-        st.error("Datos mal introducidos")  
+        st.error("Datos mal introducidos")
+ 
          
 st.subheader("Lista de Clientes Registrados")
 clientes = get_clientes()

@@ -1,17 +1,20 @@
 from mongo.database import clientes_collection
 from bson import ObjectId
-
+import uuid
 
 def create_cliente(cliente: dict):
-    result = clientes_collection.insert_one(cliente)
-    cliente["_id"] = result.inserted_id  # Asigna el `_id` generado por MongoDB
+    # Generar un ID si no se proporciona
+    if "id" not in cliente or cliente["id"] is None:
+        cliente["id"] = str(uuid.uuid4())  # Genera un UUID como string
+
+    result = clientes_collection.insert_one(cliente)  # Inserta el cliente en MongoDB
+    cliente["_id"] = str(result.inserted_id)  # Agrega el ObjectId para referencia interna
     return cliente
 
 def get_cliente(cliente_id: str):
-    cliente = clientes_collection.find_one({"_id": ObjectId(cliente_id)})
-    if cliente:
-        cliente["_id"] = str(cliente["_id"])  # Convertir `_id` a cadena
+    cliente = clientes_collection.find_one({"id": cliente_id}, {"_id": 0})  # Buscar por `id` legible
     return cliente
+
 
 
 def get_clientes(skip: int = 0, limit: int = 10):
@@ -22,9 +25,13 @@ def get_clientes(skip: int = 0, limit: int = 10):
 
 
 def add_mascota(cliente_id: str, mascota: dict):
-    mascota["_id"] = ObjectId()  # Genera un nuevo `_id` para la mascota
+    # Generar un ID legible para la mascota si no existe
+    if "id" not in mascota or mascota["id"] is None:
+        mascota["id"] = str(uuid.uuid4())  # Genera un UUID como string
+
+    # Agregar la mascota al cliente
     result = clientes_collection.update_one(
-        {"_id": ObjectId(cliente_id)},
+        {"id": cliente_id},  # Buscar cliente por `id`
         {"$push": {"mascotas": mascota}}
     )
     if result.matched_count == 0:
@@ -32,34 +39,37 @@ def add_mascota(cliente_id: str, mascota: dict):
     return mascota
 
 
+
 def update_cliente(cliente_id: str, cliente_data: dict):
-    cliente_data = {k: v for k, v in cliente_data.items() if v is not None}
     result = clientes_collection.update_one(
-        {"_id": ObjectId(cliente_id)},
-        {"$set": cliente_data}
+        {"id": cliente_id},  # Buscar por `id` legible
+        {"$set": cliente_data}  # Actualizar los datos
     )
-    if result.matched_count == 0:
-        return None
-    return get_cliente(cliente_id)
+    return result.modified_count > 0
+
 
 
 def update_mascota(cliente_id: str, mascota_id: str, mascota_data: dict):
-    cliente = clientes_collection.find_one({"_id": ObjectId(cliente_id)})
+    cliente = clientes_collection.find_one({"id": cliente_id})
     if not cliente:
         return None
+
+    # Actualizar los campos específicos de la mascota
     result = clientes_collection.update_one(
-        {"_id": ObjectId(cliente_id), "mascotas._id": ObjectId(mascota_id)},
+        {"id": cliente_id, "mascotas.id": mascota_id},  # Buscar por `id` del cliente y mascota
         {"$set": {f"mascotas.$.{k}": v for k, v in mascota_data.items()}}
     )
     return result.modified_count > 0
 
+
 def delete_cliente(cliente_id: str):
-    result = clientes_collection.delete_one({"_id": ObjectId(cliente_id)})
+    result = clientes_collection.delete_one({"id": cliente_id})  # Buscar por `id`
     return result.deleted_count > 0
+
 
 def delete_mascota(cliente_id: str, mascota_id: str):
     result = clientes_collection.update_one(
-        {"_id": ObjectId(cliente_id)},
-        {"$pull": {"mascotas": {"_id": ObjectId(mascota_id)}}}
+        {"id": cliente_id},
+        {"$pull": {"mascotas": {"id": mascota_id}}}  # Buscar por `id` de la mascota
     )
     return result.modified_count > 0

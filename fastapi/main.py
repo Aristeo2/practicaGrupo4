@@ -3,6 +3,7 @@ from mongo.crud import create_cliente, get_cliente, add_mascota, update_cliente,
 from mongo.schemas import Cliente, Mascota
 from mongo.database import clientes_collection
 from typing import List
+import uuid
 
 app = FastAPI()
 
@@ -12,8 +13,11 @@ def get_all_clientes():
 
 @app.post("/clientes/", response_model=Cliente)
 def create_cliente_endpoint(cliente: Cliente):
-    nuevo_cliente = create_cliente(cliente.dict())
+    cliente_dict = cliente.dict(by_alias=True)
+    cliente_dict.pop("_id", None)  # Remover cualquier `_id` existente
+    nuevo_cliente = create_cliente(cliente_dict)
     return nuevo_cliente
+
 
 # Endpoint para listar todos los clientes
 @app.get("/clientes/", response_model=List[Cliente])
@@ -30,10 +34,15 @@ def get_cliente_endpoint(cliente_id: str):
 
 @app.post("/clientes/{cliente_id}/mascotas/", response_model=Mascota)
 def add_mascota_endpoint(cliente_id: str, mascota: Mascota):
-    nueva_mascota = add_mascota(cliente_id, mascota.dict())
+    mascota_dict = mascota.dict()
+    if "id" not in mascota_dict or mascota_dict["id"] is None:
+        mascota_dict["id"] = str(uuid.uuid4())  # Generar un UUID para la mascota
+
+    nueva_mascota = add_mascota(cliente_id, mascota_dict)
     if not nueva_mascota:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return nueva_mascota
+
 
 @app.put("/clientes/{cliente_id}", response_model=Cliente)
 def update_cliente_endpoint(cliente_id: str, cliente: Cliente):
@@ -49,12 +58,14 @@ def update_mascota_endpoint(cliente_id: str, mascota_id: str, mascota: Mascota):
         raise HTTPException(status_code=404, detail="Cliente o mascota no encontrados")
     return {"detail": "Mascota actualizada"}
 
+
 @app.delete("/clientes/{cliente_id}")
 def delete_cliente_endpoint(cliente_id: str):
     eliminado = delete_cliente(cliente_id)
     if not eliminado:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return {"detail": "Cliente eliminado exitosamente"}
+
 
 @app.delete("/clientes/{cliente_id}/mascotas/{mascota_id}")
 def delete_mascota_endpoint(cliente_id: str, mascota_id: str):
