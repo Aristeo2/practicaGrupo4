@@ -46,3 +46,14 @@ class Cliente(BaseModel):
 
 
 
+class Cita(BaseModel):
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    cliente_id: str  # Relación con Cliente
+    mascota_id: Optional[str]  # Relación con Mascota
+    fecha_inicio: datetime
+    fecha_fin: datetime
+    tratamiento: str
+    subtratamientos: List[str] = []
+
+    class Config:
+        json_encoders = {uuid.UUID: str}

@@ -1,7 +1,10 @@
 from fastapi import FastAPI, HTTPException
-from mongo.crud import create_cliente, get_cliente, add_mascota, update_cliente, update_mascota, delete_cliente, delete_mascota
-from mongo.schemas import Cliente, Mascota
-from mongo.database import clientes_collection
+from mongo.crud import (
+    create_cliente, get_cliente, add_mascota, update_cliente, update_mascota,
+    delete_cliente, delete_mascota, create_cita, get_citas, get_cita, update_cita, delete_cita
+)
+from mongo.schemas import Cliente, Mascota, Cita
+from mongo.database import clientes_collection, citas_collection
 from typing import List
 import uuid
 
@@ -73,3 +76,41 @@ def delete_mascota_endpoint(cliente_id: str, mascota_id: str):
     if not eliminado:
         raise HTTPException(status_code=404, detail="Cliente o mascota no encontrados")
     return {"detail": "Mascota eliminada exitosamente"}
+
+
+# Gestión de Citas
+
+
+# Gestión de Citas
+@app.post("/citas/", response_model=Cita)
+def create_cita_endpoint(cita: Cita):
+    cita_dict = cita.dict(by_alias=True)
+    cita_dict.pop("_id", None)  # Remover cualquier `_id` existente
+    nueva_cita = create_cita(cita_dict)
+    return nueva_cita
+
+@app.get("/citas/", response_model=List[Cita])
+def get_citas_endpoint():
+    citas = list(citas_collection.find({}, {"_id": 0}))  # Retorna todas las citas sin el campo "_id"
+    return citas
+
+@app.get("/citas/{cita_id}", response_model=Cita)
+def get_cita_endpoint(cita_id: str):
+    cita = get_cita(cita_id)
+    if not cita:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    return cita
+
+@app.put("/citas/{cita_id}", response_model=Cita)
+def update_cita_endpoint(cita_id: str, cita: Cita):
+    actualizado = update_cita(cita_id, cita.dict(exclude_unset=True))
+    if not actualizado:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    return cita
+
+@app.delete("/citas/{cita_id}")
+def delete_cita_endpoint(cita_id: str):
+    eliminado = delete_cita(cita_id)
+    if not eliminado:
+        raise HTTPException(status_code=404, detail="Cita no encontrada")
+    return {"detail": "Cita eliminada correctamente"}

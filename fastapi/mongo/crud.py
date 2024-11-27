@@ -1,4 +1,5 @@
-from mongo.database import clientes_collection
+from mongo.database import clientes_collection, citas_collection
+from mongo.schemas import Cita
 from bson import ObjectId
 import uuid
 
@@ -73,3 +74,39 @@ def delete_mascota(cliente_id: str, mascota_id: str):
         {"$pull": {"mascotas": {"id": mascota_id}}}  # Buscar por `id` de la mascota
     )
     return result.modified_count > 0
+
+#Citas
+
+def create_cita(cita: Cita):
+    cita_dict = cita.dict()
+    cita_dict["_id"] = str(ObjectId())
+    citas_collection.insert_one(cita_dict)
+    return cita_dict
+
+
+# Obtener todas las citas
+def get_citas():
+    citas = list(citas_collection.find())
+    for cita in citas:
+        cita["_id"] = str(cita["_id"])
+    return citas
+
+
+# Obtener una cita por ID
+def get_cita(cita_id: str):
+    cita = citas_collection.find_one({"_id": ObjectId(cita_id)})
+    if cita:
+        cita["_id"] = str(cita["_id"])
+    return cita
+
+
+# Actualizar una cita por ID
+def update_cita(cita_id: str, cita_data: dict):
+    result = citas_collection.update_one({"_id": ObjectId(cita_id)}, {"$set": cita_data})
+    return result.modified_count > 0
+
+
+# Eliminar una cita por ID
+def delete_cita(cita_id: str):
+    result = citas_collection.delete_one({"_id": ObjectId(cita_id)})
+    return result.deleted_count > 0
