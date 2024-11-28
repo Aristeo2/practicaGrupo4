@@ -1,0 +1,24 @@
+[
+    {
+        "id": "833a9cc5-759c-4f4c-88a9-dffbdaf4491d",
+        "title": "Extracci\u00f3n de piezas dentales - 23",
+        "start": "2023-06-26T06:00:00+00:00",
+        "end": "2023-06-26T07:00:00+00:00",
+        "color": "#FF69B4",
+        "cliente_id": "23",
+        "mascota_id": "goma",
+        "sub_treatments": []
+    },
+    {
+        "id": "41aff90c-2c3e-4719-b92e-c3b96a9c3069",
+        "title": "Revisi\u00f3n espec\u00edfica - 45",
+        "start": "2023-06-27T06:00:00+00:00",
+        "end": "2023-06-27T07:00:00+00:00",
+        "color": "#3DD56D",
+        "cliente_id": "45",
+        "mascota_id": "33",
+        "sub_treatments": [
+            "Cut\u00e1nea"
+        ]
+    }
+]
