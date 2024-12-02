@@ -20,5 +20,15 @@
         "sub_treatments": [
             "Cut\u00e1nea"
         ]
+    },
+    {
+        "id": "e8b6ecc1-1c6f-4590-a3b3-175ee8e30974",
+        "title": "Ecograf\u00edas - 56",
+        "start": "2023-06-27T06:00:00+00:00",
+        "end": "2023-06-27T08:00:00+00:00",
+        "color": "#6C9DFF",
+        "cliente_id": "56",
+        "mascota_id": "55",
+        "sub_treatments": []
     }
 ]
