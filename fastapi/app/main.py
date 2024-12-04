@@ -11,3 +11,8 @@ app.include_router(clientes.router, prefix="/api", tags=["Clientes"])
 @app.get("/")
 def read_root():
     return {"message": "Bienvenido a la API SOLID"}
+
+# Ruta principal de salud
+@app.get("/", tags=["Health"])
+async def health_check():
+    return {"message": "API funcionando correctamente"}

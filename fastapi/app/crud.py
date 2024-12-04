@@ -1,5 +1,5 @@
 from mongo.database import clientes_collection, citas_collection
-from mongo.schemas import Cita
+from app.schemas import Cita
 from bson import ObjectId
 import uuid
 

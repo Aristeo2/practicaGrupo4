@@ -2,14 +2,14 @@ FROM tiangolo/uvicorn-gunicorn
 
 RUN mkdir /fastapi
 
-COPY requirements.txt /fastapi
+COPY requirements.txt /app/requirements.txt
 
-WORKDIR /fastapi
+WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-COPY . /fastapi
+COPY app /app/app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
