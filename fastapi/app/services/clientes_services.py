@@ -1,6 +1,6 @@
 # app/services/cliente_service.py
 from typing import List, Optional
-from app.schemas import Cliente
+from app.schemas.schemas import Cliente
 from app.db.database import Database
 
 class ClienteService:

@@ -1,11 +1,11 @@
 from fastapi import FastAPI
-from app.routers import clientes
+from app.routers.clientes import router as clientes_router 
 
 # Crear instancia de la aplicación FastAPI
 app = FastAPI()
 
 # Registrar los routers
-app.include_router(clientes.router, prefix="/api", tags=["Clientes"])
+app.include_router(clientes_router, prefix="/api")
 
 # Ruta de inicio
 @app.get("/")

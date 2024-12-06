@@ -1,7 +1,7 @@
 # app/routers/clientes.py
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
-from app.schemas import Cliente
+from app.schemas.schemas import Cliente
 from app.services.clientes_services import ClienteService
 
 router = APIRouter()
