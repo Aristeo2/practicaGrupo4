@@ -4,13 +4,12 @@ import pandas as pd
 import csv
 from modelo import Cliente, Mascota
 
-
 app = FastAPI()
 
 # Definimos las rutas de los archivos csv
-
 CLIENTES_CSV = "clientes.csv"
 MASCOTAS_CSV = "mascotas.csv"
+CONTRATOS_CSV = "contratos_inscritos_simplificado2023.csv"  # Nueva constante para el archivo de contratos
 
 # Funciones de ayuda para leer y escribir en los CSV
 def read_csv(file_path):
@@ -101,3 +100,16 @@ async def delete_mascota(mascota_id: int):
     write_csv(data, MASCOTAS_CSV)
     return {"detail": "Mascota deleted"}
 
+# Operaciones CRUD para Contratos
+@app.get("/contratos/")
+async def get_contratos():
+    data = read_csv(CONTRATOS_CSV)
+    return data.to_dict(orient="records")
+
+@app.get("/contratos/{contrato_id}")
+async def get_contrato(contrato_id: int):
+    data = read_csv(CONTRATOS_CSV)
+    contrato = data[data['id'] == contrato_id]
+    if contrato.empty:
+        raise HTTPException(status_code=404, detail="Contrato not found")
+    return contrato.to_dict(orient="records")[0]
