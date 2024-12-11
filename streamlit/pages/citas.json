@@ -1,34 +1,12 @@
 [
     {
-        "id": "833a9cc5-759c-4f4c-88a9-dffbdaf4491d",
-        "title": "Extracci\u00f3n de piezas dentales - 23",
-        "start": "2023-06-26T06:00:00+00:00",
-        "end": "2023-06-26T07:00:00+00:00",
-        "color": "#FF69B4",
-        "cliente_id": "23",
-        "mascota_id": "goma",
-        "sub_treatments": []
-    },
-    {
-        "id": "41aff90c-2c3e-4719-b92e-c3b96a9c3069",
-        "title": "Revisi\u00f3n espec\u00edfica - 45",
-        "start": "2023-06-27T06:00:00+00:00",
-        "end": "2023-06-27T07:00:00+00:00",
-        "color": "#3DD56D",
-        "cliente_id": "45",
-        "mascota_id": "33",
-        "sub_treatments": [
-            "Cut\u00e1nea"
-        ]
-    },
-    {
-        "id": "e8b6ecc1-1c6f-4590-a3b3-175ee8e30974",
-        "title": "Ecograf\u00edas - 56",
-        "start": "2023-06-27T06:00:00+00:00",
-        "end": "2023-06-27T08:00:00+00:00",
-        "color": "#6C9DFF",
-        "cliente_id": "56",
-        "mascota_id": "55",
+        "id": "a8c1e5ec-f498-4b0a-9a81-3fed6d3a9c7f",
+        "title": "Limpieza bucal - 2",
+        "start": "2024-12-10T07:00:00+00:00",
+        "end": "2024-12-10T08:00:00+00:00",
+        "color": "#FFD700",
+        "cliente_id": "2",
+        "mascota_id": "2",
         "sub_treatments": []
     }
 ]

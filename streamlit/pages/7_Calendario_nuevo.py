@@ -1,8 +1,14 @@
 import streamlit as st
 from streamlit_calendar import calendar
-from datetime import datetime, timedelta
+from datetime import datetime
+import uuid
+import json
+import os
 
-# Diccionario para tratamientos y subtratamientos
+# Ruta del archivo JSON para almacenar las citas
+JSON_FILE = "citas.json"
+
+# Diccionario de tratamientos y subtratamientos
 treatments = {
     "Análisis de sangre y hormonales": ["Vacunación", "Desparasitación"],
     "Revisión general": [],
@@ -13,101 +19,170 @@ treatments = {
     "Cirugía": ["Castración", "Abdominal", "Cardíaca", "Articular y ósea", "Hernias"]
 }
 
-# Base de datos simulada para las citas
-appointments = []
+# Función para cargar citas desde un archivo JSON
+def load_appointments():
+    """Carga las citas desde el archivo JSON si existe."""
+    if os.path.exists(JSON_FILE):
+        with open(JSON_FILE, "r") as file:
+            return json.load(file)
+    return []
 
-def main():
-    st.title("Gestión de citas - Clínica Veterinaria")
+# Función para guardar citas en un archivo JSON
+def save_appointments(appointments):
+    """Guarda las citas en el archivo JSON."""
+    with open(JSON_FILE, "w") as file:
+        json.dump(appointments, file, indent=4)
 
-    # Página principal
-    page = st.sidebar.radio("Seleccione una opción", ["Calendario", "Crear Cita"])
+# Cargar citas al inicio
+if "events" not in st.session_state:
+    st.session_state["events"] = load_appointments()
 
-    if page == "Calendario":
-        show_calendar()
-    elif page == "Crear Cita":
-        create_appointment()
+if "main_treatment" not in st.session_state:
+    st.session_state["main_treatment"] = list(treatments.keys())[0]
 
-def show_calendar():
-    """Muestra el calendario donde se puede seleccionar un día para ver las citas."""
-    st.header("Calendario de citas")
+if "selected_sub_treatments" not in st.session_state:
+    st.session_state["selected_sub_treatments"] = []
 
-    # Usamos streamlit_calendar para mostrar un calendario interactivo
-    selected_date = calendar()
+# Función para registrar una cita y agregarla al calendario
+def register_appointment(cliente_id, mascota_id, fecha_inicio, fecha_fin, tratamiento, subtratamientos):
+    """Registrar la cita y añadirla al calendario."""
+    # Convertir las fechas a datetime si son cadenas
+    if isinstance(fecha_inicio, str):
+        fecha_inicio = datetime.fromisoformat(fecha_inicio)
+    if isinstance(fecha_fin, str):
+        fecha_fin = datetime.fromisoformat(fecha_fin)
 
-    if selected_date:
-        st.write(f"Seleccionaste el día: {selected_date}")
+    # Asignar un color según el tratamiento
+    treatment_colors = {
+        "Análisis de sangre y hormonales": "#FF6C6C",
+        "Revisión general": "#FFBD45",
+        "Revisión específica": "#3DD56D",
+        "Ecografías": "#6C9DFF",
+        "Limpieza bucal": "#FFD700",
+        "Extracción de piezas dentales": "#FF69B4",
+        "Cirugía": "#FF6347",
+    }
+    color = treatment_colors.get(tratamiento, "#FFFFFF")  # Default color is white
 
-        # Mostrar citas para el día seleccionado
-        daily_appointments = [appt for appt in appointments if appt["start_date"] == selected_date]
+    # Crear un evento
+    new_event = {
+        "id": str(uuid.uuid4()),  # Generar un ID único para la cita
+        "title": f"{tratamiento} - {cliente_id}",
+        "start": fecha_inicio.isoformat(),
+        "end": fecha_fin.isoformat(),
+        "color": color,
+        "cliente_id": cliente_id,
+        "mascota_id": mascota_id,
+        "sub_treatments": subtratamientos,
+    }
 
-        if daily_appointments:
-            st.subheader(f"Citas para el {selected_date}:")
-            for appt in daily_appointments:
-                st.write(
-                    f"- **{appt['animal_name']}** ({appt['owner_name']})\n"
-                    f"  Tratamiento: {appt['treatment']}\n"
-                    f"  Subtratamientos: {', '.join(appt['sub_treatments']) if appt['sub_treatments'] else 'Ninguno'}\n"
-                    f"  Hora: {appt['start_time']} - {appt['end_time']}"
-                )
-        else:
-            st.write("No hay citas para este día.")
+    # Agregar el evento al estado
+    st.session_state["events"].append(new_event)
 
-def create_appointment():
-    """Formulario para crear una nueva cita."""
-    st.header("Crear nueva cita")
+    # Guardar en el archivo JSON
+    save_appointments(st.session_state["events"])
 
-    # Formulario de cita
-    owner_name = st.text_input("Nombre del dueño:")
-    animal_name = st.text_input("Nombre del animal:")
+    st.success(f"Cita registrada para el cliente {cliente_id} con tratamiento {tratamiento}.")
+
+# Función para mostrar el popup y registrar la cita
+@st.dialog("Registrar cita")
+def popup():
+    """Mostrar el formulario en un popup."""
+    start_time = st.session_state.get("time_inicial")
+    end_time = st.session_state.get("time_final")
+
+    if not start_time or not end_time:
+        st.error("No se ha seleccionado una franja horaria válida.")
+        return
+
+    st.write(f"Registrar cita desde {start_time} hasta {end_time}")
+
+    # Formulario para registrar la cita
+    cliente_id = st.text_input("ID del cliente:")
+    mascota_id = st.text_input("ID de la mascota (opcional):")
 
     # Selección de tratamiento principal
-    main_treatment = st.selectbox("Seleccione un tratamiento principal:", list(treatments.keys()))
+    main_treatment = st.selectbox(
+        "Seleccione un tratamiento principal:",
+        list(treatments.keys())
+    )
 
-    # Subtratamientos dinámicos basados en el tratamiento seleccionado
-    sub_treatments = []
-    if treatments[main_treatment]:
-        sub_treatments = st.multiselect(
-            f"Seleccione opciones específicas para {main_treatment}:",
-            treatments[main_treatment]
-        )
+    # Actualizar el estado del tratamiento principal y limpiar subtratamientos si se cambia
+    if main_treatment != st.session_state["main_treatment"]:
+        st.session_state["main_treatment"] = main_treatment
+        st.session_state["selected_sub_treatments"] = []  # Limpiar subtratamientos seleccionados
 
-    # Usamos streamlit_calendar para seleccionar la fecha de inicio
-    start_date = st.date_input("Fecha de inicio:")
-    
-    # Generamos las opciones de horas entre 8:00 AM y 10:00 PM en intervalos de 30 minutos
-    hours = [f"{h:02d}:{m:02d}" for h in range(8, 23) for m in [0, 30]]  # 08:00, 08:30, 09:00, 09:30, etc.
+    # Subtratamientos dinámicos
+    sub_treatments_options = treatments[st.session_state["main_treatment"]]
+    selected_sub_treatments = st.multiselect(
+        f"Seleccione opciones específicas para {st.session_state['main_treatment']}:",
+        sub_treatments_options,
+        default=st.session_state["selected_sub_treatments"]
+    )
+    st.session_state["selected_sub_treatments"] = selected_sub_treatments
 
-    # Usamos selectbox para elegir la hora
-    start_time = st.selectbox("Hora de inicio:", hours)
-
-    # Usamos la misma hora predeterminada para la fecha de fin
-    end_date = st.date_input("Fecha de fin:", start_date)
-
-    # Usamos selectbox para elegir la hora de fin (mismo rango)
-    end_time = st.selectbox("Hora de fin:", hours)
-
-    # Validación para asegurarse de que la hora de fin sea posterior a la hora de inicio
-    if end_time <= start_time:
-        st.error("La hora de fin debe ser posterior a la hora de inicio y no puede ser igual.")
-    
     # Botón para guardar la cita
     if st.button("Guardar cita"):
-        if not owner_name or not animal_name:
-            st.error("Por favor, complete todos los campos obligatorios.")
+        if not cliente_id or not main_treatment:
+            st.error("Por favor, complete los campos obligatorios.")
         else:
-            appointment = {
-                "owner_name": owner_name,
-                "animal_name": animal_name,
-                "treatment": main_treatment,
-                "sub_treatments": sub_treatments,
-                "start_date": start_date,
-                "start_time": start_time,
-                "end_date": end_date,
-                "end_time": end_time
-            }
-            appointments.append(appointment)
-            st.success(f"Cita para {animal_name} creada con éxito.")
-            st.json(appointment)
+            # Registrar la cita en el calendario
+            register_appointment(
+                cliente_id=cliente_id,
+                mascota_id=mascota_id,
+                fecha_inicio=start_time,
+                fecha_fin=end_time,
+                tratamiento=main_treatment,
+                subtratamientos=selected_sub_treatments,
+            )
 
-if __name__ == "__main__":
-    main()
+
+# Configuración del calendario
+calendar_options = {
+    "editable": "true",
+    "navLinks": "true",
+    "selectable": "true",
+    "initialDate": "2023-07-01",
+    "initialView": "timeGridWeek",
+    "headerToolbar": {
+        "left": "prev,next today",
+        "center": "title",
+        "right": "timeGridWeek,dayGridMonth",
+    },
+}
+
+# Renderizar calendario
+state = calendar(
+    events=st.session_state["events"],
+    options=calendar_options,
+    custom_css="""
+    .fc-event-past {
+        opacity: 0.8;
+    }
+    .fc-event-time {
+        font-style: italic;
+    }
+    .fc-event-title {
+        font-weight: 700;
+    }
+    .fc-toolbar-title {
+        font-size: 2rem;
+    }
+    """,
+    key="timegrid",
+)
+
+# Capturar selección de franja horaria
+if state.get("select"):
+    st.session_state["time_inicial"] = state["select"]["start"]
+    st.session_state["time_final"] = state["select"]["end"]
+    popup()
+
+# Mostrar citas registradas
+st.header("Citas registradas:")
+for event in st.session_state["events"]:
+    st.write(
+        f"- **ID Cliente:** {event['cliente_id']} | **Tratamiento:** {event['title']}\n"
+        f"  Subtratamientos: {', '.join(event['sub_treatments']) if event['sub_treatments'] else 'Ninguno'}\n"
+        f"  Horario: {event['start']} - {event['end']}"
+    )
