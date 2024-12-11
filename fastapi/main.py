@@ -3,6 +3,7 @@ from mongo.routers.cliente import router as cliente_router
 from mongo.routers.mascota import router as mascota_router
 from mongo.routers.cita import router as cita_router
 from mongo.routers.factura import router as factura_router
+from mongo.routers.contratos import router as contrato_router
 from mongo.middleware.middleware import ObjectIdMiddleware
 from mongo.db.connection import MongoConnectionManager
 
@@ -28,6 +29,7 @@ app.include_router(cliente_router, prefix="/clientes", tags=["Clientes"])
 app.include_router(mascota_router, prefix="/mascotas", tags=["Mascotas"])
 app.include_router(factura_router, prefix="/facturas", tags=["Facturas"])
 app.include_router(cita_router, prefix="/citas", tags=["Citas"])
+app.include_router(contrato_router, prefix="/contratos", tags=["Contratos"])
 
 @app.get("/")
 def read_root():
