@@ -47,26 +47,46 @@ def load_appointments():
             return json.load(file)
     return []
 
-# Función para guardar citas en un archivo JSON
-def save_appointments(appointments):
-    """Guarda las citas en el archivo JSON."""
-    with open(JSON_FILE, "w") as file:
-        json.dump(appointments, file, indent=4)
+API_URL = "http://fastapi:8000"
 
-def load_facturas():
-    if os.path.exists(FACTURAS_FILE):
-        with open(FACTURAS_FILE, "r") as file:
-            return json.load(file)
+def get_citas():
+    """Obtiene todas las citas desde la API."""
+    response = requests.get(f"{API_URL}/citas/")
+    if response.status_code == 200:
+        return response.json()
+    st.error("Error al obtener las citas.")
     return []
 
-# Función para guardar facturas en un archivo JSON
-def save_facturas(facturas):
-    with open(FACTURAS_FILE, "w") as file:
-        json.dump(facturas, file, indent=4)
+def save_cita(cita):
+    """Guarda una cita nueva mediante la API."""
+    response = requests.post(f"{API_URL}/citas/", json=cita)
+    if response.status_code == 200:
+        return response.json()
+    st.error("Error al guardar la cita.")
+    return None
 
-# Cargar citas al inicio
+def delete_cita(cita_id):
+    """Elimina una cita mediante la API."""
+    response = requests.delete(f"{API_URL}/citas/{cita_id}")
+    if response.status_code == 200:
+        return response.json()
+    st.error("Error al eliminar la cita.")
+    return None
+
+
+# Cargar citas al inicio desde la API
 if "events" not in st.session_state:
-    st.session_state["events"] = load_appointments()
+    st.session_state["events"] = [
+        {
+            "id": cita["id"],
+            "title": f"{cita['tratamiento']} - {cita['cliente_id']}",
+            "start": cita["fecha_inicio"],
+            "end": cita["fecha_fin"],
+            "color": "#FF6347",  # Puedes personalizar colores según el tratamiento
+        }
+        for cita in get_citas()
+    ]
+
 
 if "main_treatment" not in st.session_state:
     st.session_state["main_treatment"] = list(treatments.keys())[0]
@@ -103,8 +123,8 @@ def register_appointment(cliente_id, mascota_id, fecha_inicio, fecha_fin, tratam
     new_event = {
         "id": str(uuid.uuid4()),  # Generar un ID único para la cita
         "title": f"{tratamiento} - {cliente_id}",
-        "start": fecha_inicio.isoformat(),
-        "end": fecha_fin.isoformat(),
+        "fecha_inicio": fecha_inicio.isoformat(),
+        "fecha_fin": fecha_fin.isoformat(),
         "color": color,
         "cliente_id": cliente_id,
         "mascota_id": mascota_id,
