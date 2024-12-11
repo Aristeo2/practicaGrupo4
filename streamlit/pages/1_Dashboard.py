@@ -1,13 +1,16 @@
 import pandas as pd
-
 import streamlit as st
 import plotly.express as px
-
-import matplotlib
-from matplotlib.backends.backend_agg import RendererAgg
-
 import requests
 import seaborn as sns
+
+# Configuración de estilo general del dashboard
+st.set_page_config(
+    page_title="Dashboard Mejorado",
+    page_icon="🌟",
+    layout="wide",
+)
+
 @st.cache_data
 def load_data(url: str):
     r = requests.get(url)
@@ -16,81 +19,133 @@ def load_data(url: str):
     mijson = r.json()
     listado = mijson['contratos']
     df = pd.DataFrame.from_records(listado)
-    df['importe_adj_con_iva'] = df['importe_adj_con_iva'].str.replace('€', '')
-    df['importe_adj_con_iva'] = df['importe_adj_con_iva'].str.replace('.', '')
-    df['importe_adj_con_iva'] = df['importe_adj_con_iva'].str.replace(',', '.')
-    df['presupuesto_con_iva'] = df['presupuesto_con_iva'].str.replace('€', '')
-    df['presupuesto_con_iva'] = df['presupuesto_con_iva'].str.replace('.', '')
-    df['presupuesto_con_iva'] = df['presupuesto_con_iva'].str.replace(',', '.')
-
+    df['importe_adj_con_iva'] = df['importe_adj_con_iva'].str.replace('€', '').str.replace('.', '').str.replace(',', '.')
+    df['presupuesto_con_iva'] = df['presupuesto_con_iva'].str.replace('€', '').str.replace('.', '').str.replace(',', '.')
     df['presupuesto_con_iva'] = df['presupuesto_con_iva'].astype(float)
     df['importe_adj_con_iva'] = df['importe_adj_con_iva'].astype(float)
-
+    df['fecha'] = pd.to_datetime(df['fecha'], errors='coerce')  # Convertir la columna de fecha
     return df
 
-
-
-def info_box (texto, color=None):
-    st.markdown(f'<div style = "background-color:#4EBAE1;opacity:70%"><p style="text-align:center;color:white;font-size:30px;">{texto}</p></div>', unsafe_allow_html=True)
-
-
-
-#matplotlib.use("agg")
-#lock = RendererAgg.lock
+def info_card(title, value, icon, color):
+    st.markdown(
+        f"""
+        <div style="background-color:{color}; padding: 10px; border-radius: 8px; text-align: center;">
+            <h3 style="color:white;">{icon} {title}</h3>
+            <p style="font-size: 24px; color:white;">{value}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 df_merged = load_data('http://fastapi:8000/retrieve_data')
 
-
+# Calcular estadísticas generales
 registros = str(df_merged.shape[0])
 adjudicatarios = str(len(df_merged.adjuducatario.unique()))
 centro = str(len(df_merged.centro_seccion.unique()))
 tipologia = str(len(df_merged.tipo.unique()))
-presupuesto_medio = str(round(df_merged.presupuesto_con_iva.mean(),2))
-adjudicado_medio = str(round(df_merged.importe_adj_con_iva.mean(),2))
+presupuesto_medio = str(round(df_merged.presupuesto_con_iva.mean(), 2))
+adjudicado_medio = str(round(df_merged.importe_adj_con_iva.mean(), 2))
 
 sns.set_palette("pastel")
 
-st.title("Dashboard de seguimiento ∭∭∭∭∭")
+# Título del dashboard
+st.title("🔎 Dashboard Mejorado de Seguimiento ")
 
-st.header("Información general")
-
+# Información general en tarjetas
+st.header("📊 Resumen General")
 col1, col2, col3 = st.columns(3)
-
 col4, col5, col6 = st.columns(3)
+
 with col1:
-    col1.subheader('# contratos')
-    info_box(registros)
+    info_card("# Contratos", registros, "📈", "#3498db")
 with col2:
-    col2.subheader('# adjudicatarios')
-    info_box(adjudicatarios)
+    info_card("# Adjudicatarios", adjudicatarios, "💼", "#2ecc71")
 with col3:
-    col3.subheader('# centros')
-    info_box(centro)
+    info_card("# Centros", centro, "🏢", "#e74c3c")
 
 with col4:
-    col4.subheader('# tipologias')
-    info_box(tipologia)
-
-## Clases de medios digitales de publicacion
+    info_card("# Tipologías", tipologia, "🔹", "#f39c12")
 with col5:
-    col5.subheader('# presupuesto medio')
-    info_box(presupuesto_medio, col5)
+    info_card("Presupuesto Medio", f"{presupuesto_medio} €", "💵", "#9b59b6")
 with col6:
-    ## publicaciones
-    col6.subheader('# importe medio adjud')
-    info_box(adjudicado_medio, col6)
+    info_card("Importe Medio Adjudicado", f"{adjudicado_medio} €", "💳", "#1abc9c")
 
-# with st.beta_container('Información general sobre obras')
-#        datos = df_merged[['id', 'agno_i', 'clasemicro1']]
-tab1, tab2 = st.tabs(["Procedimientos negociados sin publicidad", "Distribución de importe en procedimiento Negociado sin publicidad"])
+# Visualizaciones
+st.header("🎨 Visualizaciones Interactivas")
 
-fig1 = px.scatter(df_merged,x='importe_adj_con_iva',y='presupuesto_con_iva',size='numlicit',color='procedimiento')
+# Relación entre importe adjudicado y presupuesto
+fig1 = px.scatter(
+    df_merged,
+    x='importe_adj_con_iva',
+    y='presupuesto_con_iva',
+    size='numlicit',
+    color='procedimiento',
+    title="Relación entre Importe Adjudicado y Presupuesto",
+    labels={'importe_adj_con_iva': 'Importe Adjudicado (€)', 'presupuesto_con_iva': 'Presupuesto (€)'},
+    hover_data=['tipo'],
+    template='plotly_white'
+)
+fig1.update_traces(marker=dict(opacity=0.6, line=dict(width=0.5, color='DarkSlateGrey')))
 
-fig2 = px.box(df_merged.query("procedimiento == 'Negociado sin publicidad'"),x='importe_adj_con_iva')
-with tab1:
-    # Use the Streamlit theme.
-    # This is the default. So you can also omit the theme argument.
-    st.plotly_chart(fig1, theme="streamlit", use_container_width=True)
-with tab2:
-    # Use the native Plotly theme.
-    st.plotly_chart(fig2, theme=None, use_container_width=True)
+# Distribución de importe adjudicado en 'Negociado sin publicidad'
+fig2 = px.box(
+    df_merged.query("procedimiento == 'Negociado sin publicidad'"),
+    x='importe_adj_con_iva',
+    title="Distribución del Importe Adjudicado en 'Negociado sin Publicidad'",
+    labels={'importe_adj_con_iva': 'Importe Adjudicado (€)'},
+    color_discrete_sequence=['#FF6347'],
+    template='plotly_white'
+)
+fig2.update_traces(boxpoints='all', jitter=0.3, marker_color='#FF5733', line_color='black')
+
+# Distribución por tipología
+fig3 = px.bar(
+    df_merged.groupby('tipo').agg(total_presupuesto=('presupuesto_con_iva', 'sum')).reset_index(),
+    x='tipo',
+    y='total_presupuesto',
+    color='tipo',
+    title="Presupuesto Total por Tipología",
+    labels={'tipo': 'Tipología', 'total_presupuesto': 'Presupuesto Total (€)'},
+    template='plotly_white',
+    text_auto=True
+)
+
+# Contratos por mes
+if 'fecha' in df_merged.columns and not df_merged['fecha'].isnull().all():
+    contratos_por_mes = (
+        df_merged.groupby(df_merged['fecha'].dt.to_period('M'))
+        .agg(num_contratos=('fecha', 'size'), total_costo=('importe_adj_con_iva', 'sum'))
+        .reset_index()
+    )
+    contratos_por_mes['fecha'] = contratos_por_mes['fecha'].dt.to_timestamp()
+
+    fig4 = px.line(
+        contratos_por_mes,
+        x='fecha',
+        y='num_contratos',
+        markers=True,
+        title="Evolución Mensual del Número de Contratos",
+        labels={'fecha': 'Fecha', 'num_contratos': 'Número de Contratos'},
+        hover_data={'total_costo': ':,.2f'},
+        color_discrete_sequence=['#8e44ad'],
+        template='plotly_white'
+    )
+else:
+    fig4 = None
+
+# Mostrar visualizaciones
+tabs = st.tabs(["Relación Importe-Presupuesto", "Distribución Negociado", "Presupuesto por Tipologías", "Evolución Mensual"])
+
+with tabs[0]:
+    st.plotly_chart(fig1, use_container_width=True)
+with tabs[1]:
+    st.plotly_chart(fig2, use_container_width=True)
+with tabs[2]:
+    st.plotly_chart(fig3, use_container_width=True)
+if fig4 is not None:
+    with tabs[3]:
+        st.plotly_chart(fig4, use_container_width=True)
+else:
+    with tabs[3]:
+        st.write("No hay datos disponibles para mostrar la evolución mensual.")
