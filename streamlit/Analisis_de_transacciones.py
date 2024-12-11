@@ -1,51 +1,97 @@
-
 import streamlit as st
 import time
+import importlib
 
-st.set_page_config(page_title='Ejemplito básico, de aquí al cielo', layout='wide',     page_icon="📈")
-st.image('logo.jpg')
+# Configuración de la página
+st.set_page_config(
+    page_title="Clínica Veterinaria Paws & Care",
+    layout="wide",
+    page_icon="🐾"
+)
 
+# Estilos personalizados para la página
+st.markdown(
+    """
+    <style>
+    .main-title {
+        font-size: 3em;
+        color: #4CAF50;
+        text-align: center;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    .subtitle {
+        font-size: 1.5em;
+        color: #555;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .sidebar .sidebar-content {
+        background-color: #f9f9f9;
+        padding: 20px;
+    }
+    .footer {
+        font-size: 0.9em;
+        color: #999;
+        text-align: center;
+        margin-top: 40px;
+    }
+    .service-box {
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fefefe;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .service-box h3 {
+        color: #4CAF50;
+    }
+    .sidebar .sidebar-content {
+        background-color: #f0f8ff;
+        padding: 20px;
+        border-radius: 10px;
+        font-family: 'Arial', sans-serif;
+    }
+    .sidebar .sidebar-content h1 {
+        color: #4CAF50;
+        font-size: 24px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Imagen y título principal
+st.image("logo.jpg", use_column_width="always")
+st.markdown('<div class="main-title">¡Bienvenidos a Paws & Care! 🐾</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Cuidando a tus amigos peludos con amor y dedicación.</div>', unsafe_allow_html=True)
+
+# Simulación de carga
 placeholder = st.empty()
 with placeholder:
-    #from PIL import Image
-    #image = Image.open('mired.png')
-    #placeholder.image(image, caption='MiRed semantic engine',use_column_width = 'always') 
-    for seconds in range(5):
-        placeholder.write(f"⏳ {seconds} Cargando sistema")
+    for seconds in range(3):
+        placeholder.write(f"⏳ {seconds + 1} segundos - Preparando nuestra clínica virtual...")
         time.sleep(1)
 placeholder.empty()
 
+# Servicios principales
+st.write("## Nuestros Servicios Principales")
+cols = st.columns(3)
 
-st.write("# Vamos a ello 👋")
+with cols[0]:
+    st.markdown('<div class="service-box"><h3>Consultas Médicas</h3><p>Atención personalizada para el cuidado de la salud de tus mascotas.</p></div>', unsafe_allow_html=True)
 
-st.sidebar.success("Selecciona una página. Eres libre de seleccionar.")
+with cols[1]:
+    st.markdown('<div class="service-box"><h3>Vacunación</h3><p>Protege a tus amigos peludos con nuestro plan completo de vacunas.</p></div>', unsafe_allow_html=True)
 
-st.markdown(
-    """
-    Este ejemplo lo he adaptado de:
-     1. La documentación oficial de [streamlit.io](https://streamlit.io), 
-     2. De una estructura [multipágina](https://docs.streamlit.io/develop/concepts/multipage-apps/page-and-navigation)
-     3. De un widget llamado [streamlit-calendar] () 
-     4. Y, además, de  y de un proyecto de investigación
-      
-      
-    Está basada en contenedores para para que entendáis cómo funciona docker y docker-compose y una aplicación basada
-    en microservicios.
-    Se divide en 3 páginas: 
-    1. Un dashboard. No os fijéis en el contenido, porque en la página principal voy a volcar todo el contenido de un dataframe. Esto no debería hacerse así, sobretodo si el conjunto de datos es muy grande. 
-    Es más, puedes gestionar datos desde `streamlit` (app monolítica), pero
-    ya sabéis que una arquitectura basada en microservicios tiene ciertas ventajas sobre  una app monolítica.
-    
-    2. Un formulario: no es funcional
-    3. Un calendario sobre el que se pueden mostrar e insertar / modificar datos (bien clickando, bien arrastrando un evento ya existente).
-    
-    Las páginas 2 y 3 no funcionan, a propósito. He dejado código sin completar, para que investiguéis cómo hacer una llamada post, qué tipo 
-    de cabeceras podéis gestionar en una petición de HTTP, cuáles son los códigos de respuesta que os pueden dar, etc. Tenéis que empezar a investigar
-    desde ya, siendo ya septiembre de 2024.
-    
-    Recordad: yo actuaré como cliente y, en casos muy concretos, como tecnólogo. Si me ofrecéis una funcionalidad, seguramente la quiera. Si os
-    comprometéis y no cumplís, se os penalizará. Si la aplicación no funciona al final, el proyecto será un fracaso.
-    
-    A por ello 🫡🦮🦮!!
-"""
-)
+with cols[2]:
+    st.markdown('<div class="service-box"><h3>Estética y Baños</h3><p>Mantén a tus mascotas limpias y felices con nuestros servicios de grooming.</p></div>', unsafe_allow_html=True)
+
+# Información de contacto
+st.write("### Contáctanos")
+st.write("📍 **Dirección:** Calle Siempreviva 123, Springfield")
+st.write("📞 **Teléfono:** +1 234 567 890")
+st.write("📧 **Email:** contacto@pawsandcare.com")
