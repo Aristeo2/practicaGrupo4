@@ -3,4 +3,8 @@ fastapi
 pandas
 pymongo
 motor
+pytest
+httpx
+pytest-asyncio
+starlette
 

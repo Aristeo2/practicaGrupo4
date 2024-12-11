@@ -6,6 +6,9 @@ COPY requirements.txt /fastapi
 
 WORKDIR /fastapi
 
+# Configurar el PYTHONPATH
+ENV PYTHONPATH=/fastapi
+
 RUN pip install -r requirements.txt
 
 COPY . /fastapi
