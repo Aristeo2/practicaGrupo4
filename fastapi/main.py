@@ -21,7 +21,6 @@ def create_cliente_endpoint(cliente: Cliente):
     nuevo_cliente = create_cliente(cliente_dict)
     return nuevo_cliente
 
-
 # Endpoint para listar todos los clientes
 @app.get("/clientes/", response_model=List[Cliente])
 def get_clientes_endpoint():
@@ -46,7 +45,6 @@ def add_mascota_endpoint(cliente_id: str, mascota: Mascota):
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return nueva_mascota
 
-
 @app.put("/clientes/{cliente_id}", response_model=Cliente)
 def update_cliente_endpoint(cliente_id: str, cliente: Cliente):
     cliente_actualizado = update_cliente(cliente_id, cliente.dict())
@@ -61,7 +59,6 @@ def update_mascota_endpoint(cliente_id: str, mascota_id: str, mascota: Mascota):
         raise HTTPException(status_code=404, detail="Cliente o mascota no encontrados")
     return {"detail": "Mascota actualizada"}
 
-
 @app.delete("/clientes/{cliente_id}")
 def delete_cliente_endpoint(cliente_id: str):
     eliminado = delete_cliente(cliente_id)
@@ -69,17 +66,12 @@ def delete_cliente_endpoint(cliente_id: str):
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return {"detail": "Cliente eliminado exitosamente"}
 
-
 @app.delete("/clientes/{cliente_id}/mascotas/{mascota_id}")
 def delete_mascota_endpoint(cliente_id: str, mascota_id: str):
     eliminado = delete_mascota(cliente_id, mascota_id)
     if not eliminado:
         raise HTTPException(status_code=404, detail="Cliente o mascota no encontrados")
     return {"detail": "Mascota eliminada exitosamente"}
-
-
-# Gestión de Citas
-
 
 # Gestión de Citas
 @app.post("/citas/", response_model=Cita)
