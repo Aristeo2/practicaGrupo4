@@ -1,147 +1,67 @@
 import streamlit as st
-
 from streamlit_calendar import calendar
-
 import requests
 
+# Configuración de la API FastAPI
+API_URL = "http://fastapi:8000"
 
-st.title("Demo de streamlit-calendar con popup para inserción de datos 📆")
+# Inicializar el estado
+if "events" not in st.session_state:
+    st.session_state["events"] = []
 
+# Título de la aplicación
+st.title("Gestión de Citas con Calendario 📆")
 
-def send(data):
-    #r = requests.post(
-    #    backend, json=data
-    #)
-    #return r.status_code
-    return '200'
-@st.dialog("Mete info!")
-def popup ():
-    st.write(f'Fecha de la cita')
-    with st.form("my_form"):
-        tratamiento = st.text_input("Ingrese el tratamiento:")
-        #edificio = ,,,
-        #
-        submitted = st.form_submit_button("Submit form")
+# Función para cargar citas desde FastAPI
+def load_citas():
+    try:
+        response = requests.get(API_URL)
+        response.raise_for_status()
+        citas = response.json()
+        events = [
+            {
+                "title": cita["animal_name"],
+                "start": cita["fecha_inicio"],
+                "end": cita["fecha_fin"],
+                "color": "#FF6C6C",
+                "resourceId": cita["cliente_id"],
+            }
+            for cita in citas
+        ]
+        return events
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error al cargar citas: {e}")
+        return []
 
-    if submitted:
-        envio = send(...)
-        if envio == '200':
-            st.success("Enviado con éxito, puede cerrar!")
+# Función para enviar una nueva cita al backend
+def send_cita(data):
+    try:
+        response = requests.post(API_URL, json=data)
+        if response.status_code == 200:
+            return True
         else:
-            st.error("No se envio, status_code: {}".format(envio))
+            st.error(f"Error al registrar la cita: {response.status_code}")
+            return False
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error al conectar con la API: {e}")
+        return False
 
+# Cargar las citas al inicio
+if not st.session_state["events"]:
+    st.session_state["events"] = load_citas()
 
-mode = st.selectbox(
-    "Calendar Mode:",
-    (
-        "daygrid",
-        "timegrid",
-        "timeline",
-        "resource-daygrid",
-        "resource-timegrid",
-        "resource-timeline",
-        "list",
-        "multimonth",
-    ),
-)
-
-events = [
-    {
-        "title": "Consulta Perrito",
-        "color": "#FF6C6C",
-        "start": "2023-07-03",
-        "end": "2023-07-05",
-        "resourceId": "a",
-    },
-    {
-        "title": "Consulta Gatito ",
-        "color": "#FFBD45",
-        "start": "2023-07-01",
-        "end": "2023-07-10",
-        "resourceId": "b",
-    },
-    {
-        "title": "Consulta Perrito",
-        "color": "#FF4B4B",
-        "start": "2023-07-20",
-        "end": "2023-07-20",
-        "resourceId": "c",
-    },
-    {
-        "title": "Consulta Gatito",
-        "color": "#FF6C6C",
-        "start": "2023-07-23",
-        "end": "2023-07-25",
-        "resourceId": "d",
-    },
-    {
-        "title": "Consulta Loro",
-        "color": "#FFBD45",
-        "start": "2023-07-29",
-        "end": "2023-07-30",
-        "resourceId": "e",
-    },
-    {
-        "title": "Consulta Guacamayo Ibérico",
-        "color": "#FF4B4B",
-        "start": "2023-07-28",
-        "end": "2023-07-20",
-        "resourceId": "f",
-    },
-    {
-        "title": "Estudio",
-        "color": "#FF4B4B",
-        "start": "2023-07-01T08:30:00",
-        "end": "2023-07-01T10:30:00",
-        "resourceId": "a",
-    },
-    {
-        "title": "Recados",
-        "color": "#3D9DF3",
-        "start": "2023-07-01T07:30:00",
-        "end": "2023-07-01T10:30:00",
-        "resourceId": "b",
-    },
-    {
-        "title": "Revisión Perrito",
-        "color": "#3DD56D",
-        "start": "2023-07-02T10:40:00",
-        "end": "2023-07-02T12:30:00",
-        "resourceId": "c",
-    },
-
-]
-calendar_resources = [
-    {"id": "a", "building": "Clinica 1", "title": "Consulta A"},
-    {"id": "b", "building": "Clinica 1", "title": "Consulta A"},
-    {"id": "c", "building": "Clinica 1", "title": "Consulta B"},
-    {"id": "d", "building": "Clinica 1", "title": "Consulta B"},
-    {"id": "e", "building": "Clinica 1", "title": "Consulta A"},
-    {"id": "f", "building": "Clinica 1", "title": "Consulta B"},
-]
-
-
-backend = "http://fastapi:8000/citas"  # Esta URL meterla en un parámetro de configuración
-
-
-fecha = ''
-
-
+# Opciones del calendario
 calendar_options = {
     "editable": "true",
     "navLinks": "true",
-    "resources": calendar_resources,
     "selectable": "true",
+    "initialDate": "2023-07-01",
+    "initialView": "timeGridWeek",
 }
-calendar_options = {
-            **calendar_options,
-            "initialDate": "2023-07-01",
-            "initialView": "resourceTimeGridDay",
-            "resourceGroupField": "building",
-        }
 
+# Mostrar el calendario
 state = calendar(
-    events=st.session_state.get("events", events),
+    events=st.session_state["events"],
     options=calendar_options,
     custom_css="""
     .fc-event-past {
@@ -157,31 +77,55 @@ state = calendar(
         font-size: 2rem;
     }
     """,
-    key='timegrid',
+    key="timegrid",
 )
 
-name = ''
-if state.get("eventsSet") is not None:
-    st.session_state["events"] = state["eventsSet"]
-    #st.session_state["fecha"] = state["date"]
+# Función para mostrar el popup y registrar una cita
+def popup():
+    """Mostrar formulario para registrar una nueva cita."""
+    start_time = st.session_state.get("time_inicial")
+    end_time = st.session_state.get("time_final")
 
-if state.get('select') is not None:
+    if not start_time or not end_time:
+        st.error("No se ha seleccionado una franja horaria válida.")
+        return
+
+    st.write(f"Registrar cita desde {start_time} hasta {end_time}")
+
+    with st.form("cita_form"):
+        owner_name = st.text_input("Nombre del dueño:")
+        animal_name = st.text_input("Nombre del animal:")
+        treatment = st.text_input("Tratamiento:")
+        subtratamientos = st.text_area("Subtratamientos (separados por comas):")
+        submitted = st.form_submit_button("Registrar Cita")
+
+        if submitted:
+            cita = {
+                "owner_name": owner_name,
+                "animal_name": animal_name,
+                "treatment": treatment,
+                "subtratamientos": [s.strip() for s in subtratamientos.split(",") if s],
+                "fecha_inicio": start_time,
+                "fecha_fin": end_time,
+                "cliente_id": "cliente1",  # Ajustar con el cliente real si lo tienes
+            }
+            if send_cita(cita):
+                st.success("Cita registrada con éxito.")
+                st.session_state["events"].append({
+                    "title": animal_name,
+                    "start": start_time,
+                    "end": end_time,
+                    "color": "#FF6C6C",
+                })
+
+# Manejar eventos de selección en el calendario
+if state.get("select"):
     st.session_state["time_inicial"] = state["select"]["start"]
     st.session_state["time_final"] = state["select"]["end"]
     popup()
 
-if state.get('eventChange') is not None:
-    data = state.get('eventChange').get('event')
-    ## aquí haríamos un requests.post()
-
-    st.success('cita camboada con éxito')
-
-if st.session_state.get("fecha") is not None:
-    st.write('fecha')
-    #st.write(st.session_state["fecha"])
-   # with st.popover("Open popover"):
-   #     st.markdown("Hello World 👋")
-   #     name = st.text_input("What's your name?")
-
-
-
+# Manejar cambios en eventos del calendario
+if state.get("eventChange"):
+    data = state["eventChange"]["event"]
+    st.success("Cita modificada con éxito.")
+    # Aquí puedes agregar la lógica para actualizar la cita en la API.
