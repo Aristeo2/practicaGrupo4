@@ -114,7 +114,7 @@ def register_appointment(cliente_id, mascota_id, fecha_inicio, fecha_fin, tratam
     # Agregar el evento al estado
     st.session_state["events"].append(new_event)
 
-    # Guardar en el archivo JSON
+    # Guardar en el archivo mongo
     save_appointments(st.session_state["events"])
 
     st.success(f"Cita registrada para el cliente {cliente_id} con tratamiento {tratamiento}.")
