@@ -34,7 +34,7 @@ if clientes:
     
     # Filtrar por ID de cliente
     if filtro_cliente_id:
-        df_clientes = df_clientes[df_clientes["id"].astype(str).str.contains(filtro_cliente_id, case=False)]
+        df_clientes = df_clientes[df_clientes["_id"].astype(str).str.contains(filtro_cliente_id, case=False)]
     
     # Filtrar por nombre de cliente
     if filtro_cliente_nombre:
@@ -68,7 +68,7 @@ if mascotas:
     
     # Filtrar por ID de mascota
     if filtro_mascota_id:
-        df_mascotas = df_mascotas[df_mascotas["id"].astype(str).str.contains(filtro_mascota_id, case=False)]
+        df_mascotas = df_mascotas[df_mascotas["_id"].astype(str).str.contains(filtro_mascota_id, case=False)]
     
     # Filtrar por nombre de mascota
     if filtro_mascota_nombre:
@@ -76,7 +76,7 @@ if mascotas:
     
     # Filtrar por ID del dueño
     if filtro_dueño_id:
-        df_mascotas = df_mascotas[df_mascotas["dueño"].astype(str).str.contains(filtro_dueño_id, case=False)]
+        df_mascotas = df_mascotas[df_mascotas["id_cliente"].astype(str).str.contains(filtro_dueño_id, case=False)]
     
     # Mostrar los resultados filtrados
     if not df_mascotas.empty:
