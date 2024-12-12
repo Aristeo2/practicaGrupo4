@@ -69,32 +69,33 @@ especie = st.selectbox("Especie", ["Perro", "Gato"])
 raza = st.text_input("Raza")
 fecha_nacimiento = st.date_input("Fecha de Nacimiento")
 patologias = st.text_input("Patologías")
-dueño_id = st.number_input("ID del Dueño", min_value=1, step=1)
+cliente_id = st.text_input("ID del Dueño")
 
 if st.button("Guardar Mascota"):
-    logging.info(f"Intentando guardar la mascota: {nombre_mascota}, ID del dueño: {dueño_id}")
+    logging.info(f"Intentando guardar la mascota: {nombre_mascota}, ID del dueño: {cliente_id}")
 
     # Verificar que el ID del dueño existe en la lista de clientes
     clientes = get_clientes()
-    dueño_existe = any(cliente["id"] == str(dueño_id) for cliente in clientes)  # Verifica si el ID existe en la lista
+    dueño_existe = any(cliente["_id"] == str(cliente_id) for cliente in clientes)  # Verifica si el ID existe en la lista
 
     if not dueño_existe:
         st.error("El ID del dueño no existe. Por favor, introduzca un ID válido.")
-        logging.error(f"ID del dueño {dueño_id} no encontrado.")
+        logging.error(f"ID del dueño {cliente_id} no encontrado.")
     elif VerificarMascota.nombre(nombre_mascota) and VerificarMascota.raza(raza) and VerificarMascota.patologias(patologias):
         fecha_nacimiento_datetime = datetime.combine(fecha_nacimiento, datetime.min.time())
         mascota = {
+            "id_cliente": cliente_id,
             "nombre": nombre_mascota,
             "especie": especie,
             "raza": raza,
             "fecha_nacimiento": fecha_nacimiento_datetime.isoformat(),
             "patologias": patologias,
-            "dueño": dueño_id
+            
         }
         nueva_mascota = create_mascota(mascota)
         if nueva_mascota:
             st.success("Mascota creada con éxito")
-            logging.info(f"Mascota '{nombre_mascota}' creada exitosamente con ID de dueño: {dueño_id}.")
+            logging.info(f"Mascota '{nombre_mascota}' creada exitosamente con ID de dueño: {cliente_id}.")
         else:
             st.error("Error al crear la mascota")
             logging.error("Error al crear la mascota.")

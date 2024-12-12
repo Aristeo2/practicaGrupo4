@@ -3,6 +3,7 @@
 import streamlit as st
 from datos_cliente.datoscliente import Verificar_Cliente
 import requests
+import pandas as pd
 
 
 API_URL = "http://fastapi:8000"  # URL de la API de FastAPI
@@ -87,10 +88,10 @@ if st.button("Registrar Dueño"):
             st.error("Error al crear el cliente")
       
 
-st.subheader("Lista de Clientes")
+st.subheader("Lista de Clientes Registrados")
 clientes = get_clientes()
 if clientes:
-    for cliente in clientes:
-        st.write(cliente)
+    df_clientes = pd.DataFrame(clientes)  # Convertir a DataFrame de Pandas
+    st.table(df_clientes)  # Mostrar tabla
 else:
-    st.warning("No hay mascotas registradas")
+    st.warning("No hay clientes registrados") 
