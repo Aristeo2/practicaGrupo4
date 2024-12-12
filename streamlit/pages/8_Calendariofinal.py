@@ -39,13 +39,6 @@ treatments = {
     "Cirugía": ["Castración", "Abdominal", "Cardíaca", "Articular y ósea", "Hernias"]
 }
 
-# Función para cargar citas desde un archivo JSON
-def load_appointments():
-    """Carga las citas desde el archivo JSON si existe."""
-    if os.path.exists(JSON_FILE):
-        with open(JSON_FILE, "r") as file:
-            return json.load(file)
-    return []
 
 API_URL = "http://fastapi:8000"
 
@@ -76,16 +69,21 @@ def delete_cita(cita_id):
 
 # Cargar citas al inicio desde la API
 if "events" not in st.session_state:
-    st.session_state["events"] = [
-        {
-            "id": cita["id"],
-            "title": f"{cita['tratamiento']} - {cita['cliente_id']}",
-            "start": cita["fecha_inicio"],
-            "end": cita["fecha_fin"],
-            "color": "#FF6347",  # Puedes personalizar colores según el tratamiento
-        }
-        for cita in get_citas()
-    ]
+    citas = get_citas()
+    if not citas:
+        st.error("No se pudieron cargar las citas desde la API.")
+        st.session_state["events"] = []
+    else:
+        st.session_state["events"] = [
+            {
+                "id": str(cita["_id"]),  # Mapear _id a id
+                "title": f"{cita.get('tratamiento', 'Tratamiento no especificado')} - {cita.get('cliente_id', 'ID desconocido')}",
+                "start": cita.get("fecha_inicio", "Fecha no disponible"),
+                "end": cita.get("fecha_fin", "Fecha no disponible"),
+                "color": "#FF6347",
+            }
+            for cita in citas
+        ]
 
 
 if "main_treatment" not in st.session_state:
@@ -97,14 +95,17 @@ if "selected_sub_treatments" not in st.session_state:
 # Función para registrar una cita y agregarla al calendario
 def register_appointment(cliente_id, mascota_id, fecha_inicio, fecha_fin, tratamiento, subtratamientos):
     """Registrar la cita y añadirla al calendario."""
-    # Convertir las fechas a datetime si son cadenas
-    if isinstance(fecha_inicio, str):
-        fecha_inicio = datetime.fromisoformat(fecha_inicio)
-    if isinstance(fecha_fin, str):
-        fecha_fin = datetime.fromisoformat(fecha_fin)
-        
+    nueva_cita = {
+        "cliente_id": cliente_id,
+        "mascota_id": mascota_id,
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin,
+        "tratamiento": tratamiento,
+        "sub_treatments": subtratamientos,
+    }
+
     if check_appointment_conflict(fecha_inicio, fecha_fin, st.session_state["events"]):
-        st.error("Error: Esta cita se solapa con una cita existente. Por favor, elija otro horario.")
+        st.error("Error: El horario de la cita entra en conflicto con otra existente.")
         return False
 
     # Asignar un color según el tratamiento
@@ -119,83 +120,82 @@ def register_appointment(cliente_id, mascota_id, fecha_inicio, fecha_fin, tratam
     }
     color = treatment_colors.get(tratamiento, "#FFFFFF")  # Default color is white
 
-    # Crear un evento
-    new_event = {
-        "id": str(uuid.uuid4()),  # Generar un ID único para la cita
-        "title": f"{tratamiento} - {cliente_id}",
-        "fecha_inicio": fecha_inicio.isoformat(),
-        "fecha_fin": fecha_fin.isoformat(),
-        "color": color,
-        "cliente_id": cliente_id,
-        "mascota_id": mascota_id,
-        "sub_treatments": subtratamientos,
-    }
+    cita_guardada = save_cita(nueva_cita)
+    if cita_guardada:
+        st.session_state["events"].append({
+            "id": str(cita_guardada["id"]),  # Cambiado de _id a id
+            "title": f"{tratamiento} - {cliente_id}",
+            "start": fecha_inicio,
+            "end": fecha_fin,
+            "color": "#FF6347",
+            "sub_treatments": subtratamientos
+        })
+        st.success(f"Cita registrada para el cliente {cliente_id} con tratamiento {tratamiento}.")
+        return True
+    return False
 
-    # Agregar el evento al estado
-    st.session_state["events"].append(new_event)
-
-    # Guardar en el archivo JSON
-    save_appointments(st.session_state["events"])
-
-    st.success(f"Cita registrada para el cliente {cliente_id} con tratamiento {tratamiento}.")
 
 def save_dragged_event(event_id, new_start, new_end):
-    """Guarda permanentemente un evento arrastrado."""
+    """Actualiza las fechas de una cita arrastrada."""
     try:
-        # Cargar eventos desde el archivo JSON
-        with open(JSON_FILE, "r") as file:
-            events = json.load(file)
+        # Convertir nuevos tiempos a datetime sin zona horaria
+        new_start_dt = datetime.fromisoformat(new_start).replace(tzinfo=None)
+        new_end_dt = datetime.fromisoformat(new_end).replace(tzinfo=None)
 
-        # Convertir nuevos tiempos a datetime  
-        new_start_dt = datetime.fromisoformat(new_start)
-        new_end_dt = datetime.fromisoformat(new_end)
-        
         # Crear una lista de eventos para verificar conflictos (excluyendo el evento actual)
-        conflict_events = [event for event in events if event['id'] != event_id]
-        
+        conflict_events = [event for event in st.session_state["events"] if event['id'] != event_id]
+
         # Verificar conflictos antes de actualizar
         for event in conflict_events:
-            event_start = datetime.fromisoformat(event['start'])
-            event_end = datetime.fromisoformat(event['end'])
-        
-        # Verificar si hay solape
+            event_start = datetime.fromisoformat(event['start']).replace(tzinfo=None)
+            event_end = datetime.fromisoformat(event['end']).replace(tzinfo=None)
+
+            # Verificar si hay solape
             if new_start_dt < event_end and new_end_dt > event_start:
                 st.error("Error: No se puede mover la cita. El nuevo horario está ocupado.")
                 return False
-        
-        # Buscar y actualizar el evento específico
-        for event in events:
-            if event["id"] == event_id:
-                event["start"] = new_start
-                event["end"] = new_end
-                break
-        
-        # Guardar los eventos actualizados
-        with open(JSON_FILE, "w") as file:
-            json.dump(events, file, indent=4)
-        
-        # Actualizar también el estado de Streamlit
-        st.session_state["events"] = events
-        
-        st.toast("Evento actualizado correctamente", icon="✅")
-        return True
+
+        # Actualizar las fechas en la API
+        update_data = {
+            "fecha_inicio": new_start,
+            "fecha_fin": new_end,
+        }
+        response = requests.put(f"{API_URL}/citas/{event_id}", json=update_data)
+
+        if response.status_code == 200:
+            # Actualizar localmente
+            for event in st.session_state["events"]:
+                if event["id"] == event_id:
+                    event["start"] = new_start
+                    event["end"] = new_end
+                    break
+            st.toast("Evento actualizado correctamente", icon="✅")
+            return True
+        else:
+            st.error(f"Error al actualizar la cita en el servidor. Respuesta: {response.text}")
+            return False
     except Exception as e:
         st.error(f"Error al guardar el evento: {e}")
         return False
+
         
-def check_appointment_conflict(new_start, new_end, existing_events):
-    new_start = datetime.fromisoformat(new_start) if isinstance(new_start, str) else new_start
-    new_end = datetime.fromisoformat(new_end) if isinstance(new_end, str) else new_end
-    
-    for event in existing_events:
-        event_start = datetime.fromisoformat(event['start'])
-        event_end = datetime.fromisoformat(event['end'])
-        
-        # Check for overlapping times
-        if (new_start < event_end and new_end > event_start):
-            return True
-    
-    return False
+def check_appointment_conflict(new_start, new_end, events):
+    """Verifica si una nueva cita entra en conflicto con las citas existentes."""
+    try:
+        new_start_dt = datetime.fromisoformat(new_start).replace(tzinfo=None)
+        new_end_dt = datetime.fromisoformat(new_end).replace(tzinfo=None)
+
+        for event in events:
+            event_start = datetime.fromisoformat(event["start"]).replace(tzinfo=None)
+            event_end = datetime.fromisoformat(event["end"]).replace(tzinfo=None)
+
+            if new_start_dt < event_end and new_end_dt > event_start:
+                return True  # Conflicto encontrado
+        return False  # No hay conflictos
+    except Exception as e:
+        st.error(f"Error al verificar conflictos: {e}")
+        return True
+
 
 # Función para actualizar un evento en la lista de eventos
 def update_event(event_id, new_start, new_end):
@@ -264,7 +264,6 @@ def popup():
             )
            
 # Función para manejar el clic en un evento y mostrar las opciones
-@st.dialog("Opciones para la cita seleccionada")
 def event_options_popup(event_data):
     """Muestra un popup con opciones al hacer clic en un evento."""
     # Extraer datos del evento clickeado
@@ -288,31 +287,28 @@ def event_options_popup(event_data):
         # Entrada para el importe
         importe = st.number_input("Ingrese el importe de la factura:", min_value=0.0, format="%.2f", key=f"factura_importe_{event_id}")
 
-        # Al pulsar este botón, se guarda la factura
+        # Al pulsar este botón, se crea la factura directamente en la base de datos
         if st.button("Registrar Factura", key=f"registrar_factura_{event_id}"):
             factura = {
-                "id": str(uuid.uuid4()),
-                "evento_titulo": evento_title,
-                "cliente_id": cliente_id,
-                "importe": importe,
-                "fecha": datetime.now().isoformat(),
+                "cita_id": event_id,
+                "precio": importe
             }
 
-            # Guardar factura en el estado y en el archivo
-            if "facturas" not in st.session_state:
-                st.session_state["facturas"] = []
-            st.session_state["facturas"].append(factura)
-            save_facturas(st.session_state["facturas"])
+            response = requests.post(f"{API_URL}/facturas/", json=factura)
 
-            st.success(f"Factura registrada correctamente con un importe de {importe:.2f}.")
+            if response.status_code == 200:
+                st.success(f"Factura registrada correctamente con un importe de {importe:.2f}.")
+            else:
+                st.error("Error al registrar la factura en la base de datos.")
 
     # Opción de eliminar cita
     if st.button("Eliminar cita"):
         # Eliminar la cita seleccionada
+        delete_cita(event_id) # Actualizar en la base de datos
         st.session_state["events"] = [
             event for event in st.session_state["events"] if event["id"] != event_id
         ]
-        save_appointments(st.session_state["events"])  # Actualizar archivo JSON
+          
 
         st.success(f"Cita '{evento_title}' eliminada correctamente.")
 
@@ -372,19 +368,20 @@ else:
     citas_data = []
     for event in st.session_state["events"]:
         # Dividir la fecha y la hora
-        start_datetime = datetime.fromisoformat(event["start"])
-        end_datetime = datetime.fromisoformat(event["end"])
+        start_datetime = datetime.fromisoformat(event["start"]).replace(tzinfo=None)
+        end_datetime = datetime.fromisoformat(event["end"]).replace(tzinfo=None)
 
         citas_data.append({
-            "ID Cliente": event["cliente_id"],
-            "Tratamiento": event["title"],
-            "Subtratamientos": ", ".join(event["sub_treatments"]) if event["sub_treatments"] else "Ninguno",
+            "ID Cliente": event.get("cliente_id", "Desconocido"),
+            "Tratamiento": event.get("title", "No especificado"),
+            "Subtratamientos": ", ".join(event.get("sub_treatments", [])) if event.get("sub_treatments") else "Ninguno",
             "Fecha": start_datetime.date().isoformat(),
             "Hora Inicio": start_datetime.time().strftime("%H:%M"),
             "Hora Fin": end_datetime.time().strftime("%H:%M"),
         })
-    
+
     citas_df = pd.DataFrame(citas_data)
+
 
     # Mostrar la tabla
     st.dataframe(
